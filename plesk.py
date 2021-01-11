@@ -228,6 +228,8 @@ def main():
         parser.add_argument('-p', dest='password', type=str, required=True, action=Password, nargs='?', help='Plesk administrator password')
         parser.add_argument('-s', dest='sort', type=str, default='created', help='Provide a sorting option', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
         parser.add_argument('-f', dest='tablefmt', type=str, default='pretty', help='Provide a formatting option for the table', choices=['plain', 'simple', 'github', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'jira', 'presto', 'pretty', 'psql', 'rst', 'mediawiki', 'moinmoin', 'youtrack', 'html', 'latex', 'latex_raw', 'latex_booktabs', 'textile'])
+        parser.add_argument('-o', dest='csvpath', type=str, help='Optionally, provide a path to export the data in a csv file')
+
 
         args = parser.parse_args()
 
@@ -236,6 +238,7 @@ def main():
         password = args.password
         sort = args.sort
         tablefmt = args.tablefmt
+        csvpath = args.csvpath
 
         print_server_info(host, username, password)
 
@@ -247,13 +250,12 @@ def main():
             loop += 1
             domain = domains[i]
 
+            # get domain status
             domain['status'] = get_domain_status(domain['id'], host, username, password)
-            domain['status'] = colored(domain['status'], "red" if domain['status'] != "active" else "green")
 
             # get domain ip
             server_ip = get_ip(host)
             domain['ip'] = get_ip(domain['name'])
-            domain['ip'] = colored(domain['ip'], "green" if server_ip == domain['ip'] else "red")
 
             # try:
             #     domain_whois = whois.query(domain['name'])
@@ -269,22 +271,7 @@ def main():
 
             if domain['type'] == 'virtual':
                 certificate = get_certificate(domain['name'])
-                expiry_date = get_expiry(certificate)
-
-                if expiry_date:
-                    now = datetime.utcnow()
-                    if expiry_date < now:
-                        color = "red"
-                    elif now + timedelta(seconds = 60*60*24*30) > expiry_date:
-                        color = "yellow"
-                    elif now + timedelta(seconds = 60*60*24*30*3) > expiry_date:
-                        color = "blue"
-                    else:
-                        color = "green"
-                    domain['expiry_date'] = colored(expiry_date, color)
-                else:
-                    domain['expiry_date'] = '-'
-
+                domain['expiry_date'] = get_expiry(certificate)
                 domain['issuer'] = get_issuer(certificate)
             else:
                 domain['expiry_date'] = "-"
@@ -294,15 +281,37 @@ def main():
 
             print_progress_bar(loop, domains_count)
 
+        # sort domain list
         domains = sorted(domains, key = lambda i: i[sort])
 
-        print(tabulate(domains, headers="keys", tablefmt=tablefmt))
+        # export to csv
+        if (csvpath):
+            keys = domains[0].keys()
+            with open(str(csvpath)+str(host)+'-domains.csv', 'w', newline='')  as output_file:
+                dict_writer = csv.DictWriter(output_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(domains)
 
-        keys = domains[0].keys()
-        with open(str(host)+'-domains.csv', 'w', newline='')  as output_file:
-            dict_writer = csv.DictWriter(output_file, keys)
-            dict_writer.writeheader()
-            dict_writer.writerows(domains)
+        #colorate list values
+        for i in range(domains_count):
+            domain = domains[i]
+            domain['status'] = colored(domain['status'], "red" if domain['status'] != "active" else "green")
+            domain['ip'] = colored(domain['ip'], "green" if server_ip == domain['ip'] else "red")
+            if domain['expiry_date'] and type(domain['expiry_date']) is datetime:
+                now = datetime.utcnow()
+                if domain['expiry_date'] < now:
+                    color = "red"
+                elif now + timedelta(seconds = 60*60*24*30) > domain['expiry_date']:
+                    color = "yellow"
+                elif now + timedelta(seconds = 60*60*24*30*3) > domain['expiry_date']:
+                    color = "blue"
+                else:
+                    color = "green"
+
+                domain['expiry_date'] = colored(domain['expiry_date'], color)
+
+        # print to terminal
+        print(tabulate(domains, headers="keys", tablefmt=tablefmt))
 
     except Exception as e:
         sys.exit(e)
