@@ -16,30 +16,14 @@ import warnings
 import argparse
 import getpass
 
-class PasswordPromptAction(argparse.Action):
-    def __init__(self,
-             option_strings,
-             dest=None,
-             nargs=0,
-             default=None,
-             required=False,
-             type=None,
-             metavar=None,
-             help=None):
-        super(PasswordPromptAction, self).__init__(
-             option_strings=option_strings,
-             dest=dest,
-             nargs=nargs,
-             default=default,
-             required=required,
-             metavar=metavar,
-             type=type,
-             help=help)
 
-    def __call__(self, parser, args, values, option_string=None):
-        password = getpass.getpass()
-        setattr(args, self.dest, password)
+class Password(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string):
+        if values is None:
+            values = getpass.getpass()
 
+        setattr(namespace, self.dest, values)
+        
 
 def print_server_info(ip, user, password):
     """
@@ -225,7 +209,7 @@ if __name__ == "__main__":
 
         parser.add_argument('ip', type=str, help='server ip address')
         parser.add_argument('-u', dest='username', type=str, required=True, help='Plesk administrator username')
-        parser.add_argument('-p', dest='password', type=str, required=True, action=PasswordPromptAction, help='Plesk administrator password')
+        parser.add_argument('-p', dest='password', type=str, required=True, action=Password, nargs='?', help='Plesk administrator password')
         parser.add_argument('-s', dest='sort', type=str, default='created', help='Provide a sorting option', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
         parser.add_argument('-f', dest='tablefmt', type=str, default='pretty', help='Provide a formatting option for the table', choices=['plain', 'simple', 'github', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'jira', 'presto', 'pretty', 'psql', 'rst', 'mediawiki', 'moinmoin', 'youtrack', 'html', 'latex', 'latex_raw', 'latex_booktabs', 'textile'])
 
