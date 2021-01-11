@@ -3,7 +3,7 @@ from tabulate import tabulate
 import ssl
 from OpenSSL import SSL
 from datetime import datetime, timedelta
-import whois
+#import whois
 import platform
 import subprocess
 import socket
@@ -13,8 +13,8 @@ import idna
 from socket import socket, gethostbyname
 import sys
 import warnings
-import argparse
-import getpass
+import argparse, getpass
+import csv
 
 
 class Password(argparse.Action):
@@ -41,7 +41,7 @@ def print_server_info(ip, user, password):
         data = r.json()
         return print(f"{'='*100}\nServer info: {data['hostname']}, platform: {data['platform']}, panel version: {data['panel_version']} ({data['panel_revision']})\n{'='*100}\n")
     except:
-        print(f"Error occured while trying to get server info")
+        sys.exit(f"Error occured while trying to get server info")
 
 
 def get_domains(ip, user, password):
@@ -60,12 +60,30 @@ def get_domains(ip, user, password):
         response = r.json()
 
         # keep only the data we want
-        domains = list(map(lambda x: {'name': x['name'], 'created': x['created'], 'type': x['hosting_type'], 'root': x['www_root']}, response))
+        domains = list(map(lambda x: {'id': x['id'], 'name': x['name'], 'created': x['created'], 'type': x['hosting_type'], 'root': x['www_root']}, response))
 
         return domains
     except:
-        print("Error occured while trying to get the domain list")
+        sys.exit("Error occured while trying to get the domain list")
 
+
+def get_domain_status(id, ip, user, password):
+    """
+    get domain status
+    @params:
+        ip   - Required  : the ip of the server (Str)
+        user - Required  : the administrator username (Str)
+        password - Required  : The administrator password (Str)
+    """
+
+    try:
+        r = requests.get(f'https://{ip}:8443/api/v2/domains/{id}/status', auth=(user, password), verify=False)
+        if r.status_code != 200:
+            raise Exception(f"Invalid response from plesk api. Response code: {r.status_code}")
+        data = r.json()
+        return data['status']
+    except:
+        return "Error"
 
 def ping(host):
     """
@@ -91,8 +109,8 @@ def get_ip(host):
 
     try:
         return gethostbyname(host)
-    except:
-        return "-"
+    except Exception as e:
+        return e
 
 
 def get_certificate(hostname, port=443):
@@ -196,18 +214,16 @@ def get_expiry(cert):
     except:
         return None
 
-if __name__ == "__main__":
-    warnings.filterwarnings("ignore")
+
+def main():
+    """
+    Main script function
+    """
 
     try:
-        #script = sys.argv[0]
-        #ip = sys.argv[1]
-        #username = input("please enter username: ")
-        #password = input("please enter password: ")
-
         parser = argparse.ArgumentParser(prog='pleskdomains', description='Get the list of domains from a plesk panel with certificate information')
 
-        parser.add_argument('ip', type=str, help='server ip address')
+        parser.add_argument('host', type=str, help='server hostname or ip address')
         parser.add_argument('-u', dest='username', type=str, required=True, help='Plesk administrator username')
         parser.add_argument('-p', dest='password', type=str, required=True, action=Password, nargs='?', help='Plesk administrator password')
         parser.add_argument('-s', dest='sort', type=str, default='created', help='Provide a sorting option', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
@@ -215,74 +231,83 @@ if __name__ == "__main__":
 
         args = parser.parse_args()
 
-        ip = args.ip
+        host = args.host
         username = args.username
         password = args.password
         sort = args.sort
         tablefmt = args.tablefmt
 
-    except IndexError:
-        print("Please enter username and password")
-        sys.exit()
+        print_server_info(host, username, password)
 
+        domains = get_domains(host, username, password)
+        domains_count = len(domains)
+        loop = 0
 
-    print_server_info(ip, username, password)
+        for i in range(domains_count):
+            loop += 1
+            domain = domains[i]
 
-    domains = get_domains(ip, username, password)
-    domains_count = len(domains)
-    loop = 0
+            domain['status'] = get_domain_status(domain['id'], host, username, password)
+            domain['status'] = colored(domain['status'], "red" if domain['status'] != "active" else "green")
 
-    for i in range(domains_count):
-        loop += 1
-        domain = domains[i]
+            # get domain ip
+            server_ip = get_ip(host)
+            domain['ip'] = get_ip(domain['name'])
+            domain['ip'] = colored(domain['ip'], "green" if server_ip == domain['ip'] else "red")
 
-        # get domain ip
-        domain['ip'] = get_ip(domain['name'])
+            # try:
+            #     domain_whois = whois.query(domain['name'])
+            #     print(domain_whois.__dict__)
+            # except:
+            #     print("error")
+            
 
-        cert = get_certificate(domain['name'])
+            #print(ping(domain['name']))
 
-        # get ssl
-        if domain['type'] == 'virtual':
-            certificate = get_certificate(domain['name'])
-            expiry_date = get_expiry(certificate)
+            # get ssl
+            cert = get_certificate(domain['name'])
 
-            if expiry_date:
-                now = datetime.utcnow()
-                if expiry_date < now:
-                    color = "red"
-                elif now + timedelta(seconds = 60*60*24*30) > expiry_date:
-                    color = "yellow"
-                elif now + timedelta(seconds = 60*60*24*30*3) > expiry_date:
-                    color = "blue"
+            if domain['type'] == 'virtual':
+                certificate = get_certificate(domain['name'])
+                expiry_date = get_expiry(certificate)
+
+                if expiry_date:
+                    now = datetime.utcnow()
+                    if expiry_date < now:
+                        color = "red"
+                    elif now + timedelta(seconds = 60*60*24*30) > expiry_date:
+                        color = "yellow"
+                    elif now + timedelta(seconds = 60*60*24*30*3) > expiry_date:
+                        color = "blue"
+                    else:
+                        color = "green"
+                    domain['expiry_date'] = colored(expiry_date, color)
                 else:
-                    color = "green"
-                domain['expiry_date'] = colored(expiry_date, color)
+                    domain['expiry_date'] = '-'
+
+                domain['issuer'] = get_issuer(certificate)
             else:
-                domain['expiry_date'] = '-'
+                domain['expiry_date'] = "-"
+                domain['issuer'] = "-"
+            
+            domains[i] = domain
 
-            domain['issuer'] = get_issuer(certificate)
-        else:
-            domain['expiry_date'] = "-"
-            domain['issuer'] = "-"
-        
-        domains[i] = domain
+            print_progress_bar(loop, domains_count)
 
-        #sys.stdout.write('\r')
-        # the exact output you're looking for:
-        #sys.stdout.write(f"{round(loop/domains_count * 100)}%")
-        #sys.stdout.flush()
-        print_progress_bar(loop, domains_count)
+        domains = sorted(domains, key = lambda i: i[sort])
 
-    domains = sorted(domains, key = lambda i: i[sort])
+        print(tabulate(domains, headers="keys", tablefmt=tablefmt))
 
-    print(tabulate(domains, headers="keys", tablefmt=tablefmt))
+        keys = domains[0].keys()
+        with open(str(host)+'-domains.csv', 'w', newline='')  as output_file:
+            dict_writer = csv.DictWriter(output_file, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(domains)
+
+    except Exception as e:
+        sys.exit(e)
 
 
-
-    #try:
-    #    domain_whois = whois.query(domain)
-     #   print(domain_whois.__dict__)
-    #except:
-    #    print("error")
-    
-    # print(ping(domain))
+if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
+    main()
