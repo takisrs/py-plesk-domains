@@ -3,7 +3,6 @@ from tabulate import tabulate
 import ssl
 from OpenSSL import SSL
 from datetime import datetime, timedelta
-#import whois
 import platform
 import subprocess
 import socket
@@ -124,9 +123,10 @@ def get_certificate(hostname, port=443):
     try:
         hostname_idna = idna.encode(hostname)
         sock = socket()
-
+        sock.settimeout(10)
         sock.connect((hostname, port))
-        # peername = sock.getpeername()
+        sock.settimeout(None)
+        #peername = sock.getpeername()
         ctx = SSL.Context(SSL.SSLv23_METHOD) # most compatible
         ctx.check_hostname = False
         ctx.verify_mode = SSL.VERIFY_NONE
@@ -221,7 +221,7 @@ def main():
     """
 
     try:
-        parser = argparse.ArgumentParser(prog='pleskdomains', description='Get the list of domains from a plesk panel with certificate information')
+        parser = argparse.ArgumentParser(prog='py-plesk-domains', description='Get the list of domains from a plesk panel with certificate information')
 
         parser.add_argument('host', type=str, help='server hostname or ip address')
         parser.add_argument('-u', dest='username', type=str, required=True, help='Plesk administrator username')
@@ -257,18 +257,7 @@ def main():
             server_ip = get_ip(host)
             domain['ip'] = get_ip(domain['name'])
 
-            # try:
-            #     domain_whois = whois.query(domain['name'])
-            #     print(domain_whois.__dict__)
-            # except:
-            #     print("error")
-            
-
-            #print(ping(domain['name']))
-
             # get ssl
-            cert = get_certificate(domain['name'])
-
             if domain['type'] == 'virtual':
                 certificate = get_certificate(domain['name'])
                 domain['expiry_date'] = get_expiry(certificate)
@@ -276,7 +265,7 @@ def main():
             else:
                 domain['expiry_date'] = "-"
                 domain['issuer'] = "-"
-            
+
             domains[i] = domain
 
             print_progress_bar(loop, domains_count)
