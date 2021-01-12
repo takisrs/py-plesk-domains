@@ -15,6 +15,9 @@ import warnings
 import argparse, getpass
 import csv
 
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -59,7 +62,7 @@ def get_domains(ip, user, password):
         response = r.json()
 
         # keep only the data we want
-        domains = list(map(lambda x: {'id': x['id'], 'name': x['name'], 'created': x['created'], 'type': x['hosting_type'], 'root': x['www_root']}, response))
+        domains = list(map(lambda x: {'id': x['id'], 'name': x['name'], 'created': x['created'], 'type': x['hosting_type']}, response)) #, 'root': x['www_root']
 
         return domains
     except:
@@ -307,5 +310,4 @@ def main():
 
 
 if __name__ == "__main__":
-    warnings.filterwarnings("ignore")
     main()
