@@ -230,7 +230,7 @@ def main():
         parser.add_argument('host', type=str, help='server hostname or ip address')
         parser.add_argument('-u', dest='username', type=str, required=True, help='Plesk administrator username')
         parser.add_argument('-p', dest='password', type=str, required=True, action=Password, nargs='?', help='Plesk administrator password')
-        parser.add_argument('-s', dest='sort', type=str, default='created', help='Select a sorting option. Default: created', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
+        parser.add_argument('-s', dest='sort', type=str, default='created', help='Select a sorting option. Default: created', choices=['name', 'created', 'type', 'status', 'ip', 'expiry_date', 'issuer'])
         parser.add_argument('-f', dest='tablefmt', type=str, default='pretty', help='Select a formatting option for the table. Default: pretty', choices=['plain', 'simple', 'github', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'jira', 'presto', 'pretty', 'psql', 'rst', 'mediawiki', 'moinmoin', 'youtrack', 'html', 'latex', 'latex_raw', 'latex_booktabs', 'textile'])
         parser.add_argument('-o', dest='csvpath', type=str, help='Optionally, Provide a path to export the data in a csv file')
 
