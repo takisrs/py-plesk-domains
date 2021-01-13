@@ -224,14 +224,15 @@ def main():
     """
 
     try:
-        parser = argparse.ArgumentParser(prog='py-plesk-domains', description='Get the list of domains from a plesk panel with certificate information')
+        parser = argparse.ArgumentParser(prog='py-plesk-domains', description='Returns the domains from a server with plesk panel with some extra \
+        info for each domain (current domain\'s ip address, certificate expiration date, certificate issuer).')
 
         parser.add_argument('host', type=str, help='server hostname or ip address')
         parser.add_argument('-u', dest='username', type=str, required=True, help='Plesk administrator username')
         parser.add_argument('-p', dest='password', type=str, required=True, action=Password, nargs='?', help='Plesk administrator password')
-        parser.add_argument('-s', dest='sort', type=str, default='created', help='Provide a sorting option', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
-        parser.add_argument('-f', dest='tablefmt', type=str, default='pretty', help='Provide a formatting option for the table', choices=['plain', 'simple', 'github', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'jira', 'presto', 'pretty', 'psql', 'rst', 'mediawiki', 'moinmoin', 'youtrack', 'html', 'latex', 'latex_raw', 'latex_booktabs', 'textile'])
-        parser.add_argument('-o', dest='csvpath', type=str, help='Optionally, provide a path to export the data in a csv file')
+        parser.add_argument('-s', dest='sort', type=str, default='created', help='Select a sorting option. Default: created', choices=['name', 'created', 'type', 'ip', 'expiry_date', 'issuer'])
+        parser.add_argument('-f', dest='tablefmt', type=str, default='pretty', help='Select a formatting option for the table. Default: pretty', choices=['plain', 'simple', 'github', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'jira', 'presto', 'pretty', 'psql', 'rst', 'mediawiki', 'moinmoin', 'youtrack', 'html', 'latex', 'latex_raw', 'latex_booktabs', 'textile'])
+        parser.add_argument('-o', dest='csvpath', type=str, help='Optionally, Provide a path to export the data in a csv file')
 
 
         args = parser.parse_args()
