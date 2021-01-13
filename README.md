@@ -25,7 +25,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -u USERNAME           Plesk administrator username
   -p [PASSWORD]         Plesk administrator password
-  -s {name,created,type,ip,expiry_date,issuer}
+  -s {name,created,type,status,ip,expiry_date,issuer}
                         Select a sorting option. Default: created
   -f {plain,simple,github,grid,fancy_grid,pipe,orgtbl,jira,presto,pretty,psql,rst,mediawiki,moinmoin,youtrack,html,latex,latex_raw,latex_booktabs,textile}
                         Select a formatting option for the table. Default: pretty
