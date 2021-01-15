@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='py-plesk-domains',
-    version='1.0.0',
+    version='1.1.0',
     scripts=['py_plesk_domains.py'],
     entry_points={
         'console_scripts': [

@@ -7,6 +7,18 @@ Except from the data that plesk's api returns (id, domain, created datetime, typ
 It's recommended to use Python 3.7 or newer.   
 
 ```pip install git+https://github.com/takisrs/py-plesk-domains.git```   
+
+
+## Docker
+Alternatively, you may quick run it through docker...   
+
+1. By cloning this repo and using the provided docker-dompose.yml file:   
+ex.   
+```docker-compose run --rm py-plesk-domains server-hostname.com -u admin -o ./ -p```  
+
+2. Or by pulling and running the image that has been uploaded in the docker hub:   
+ex.   
+```docker container run -it --rm -v ${PWD}:/app py-plesk-domains server-hostname.com -u admin -o ./ -p```   
    
 
 ## Instructions
