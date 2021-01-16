@@ -8,6 +8,9 @@ It's recommended to use Python 3.7 or newer.
 
 ```pip install git+https://github.com/takisrs/py-plesk-domains.git```   
 
+or...   
+```pip install py-plesk-domains```   
+
 
 ## Docker
 Alternatively, you may quick run it through docker...   
@@ -50,4 +53,4 @@ optional arguments:
 
 
 ## Demo
-![demo output](screenshot.png)
+![demo output](https://github.com/takisrs/py-plesk-domains/blob/main/screenshot.png?raw=true)
