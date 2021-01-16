@@ -217,6 +217,19 @@ def get_expiry(cert):
     except:
         return None
 
+def output_to_csv(csvpath, csvname, domains):
+    """
+    Writes the domains' data on a csv file
+    @params
+        csvpath - Required : the path where the csv file with be created
+        csvname = Required : the filename of the csv file
+        domains - Required : domains' data
+    """
+    keys = domains[0].keys()
+    with open(str(csvpath)+str(csvname), 'w', newline='')  as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(domains)
 
 def main():
     """
@@ -279,11 +292,8 @@ def main():
 
         # export to csv
         if (csvpath):
-            keys = domains[0].keys()
-            with open(str(csvpath)+str(host)+'-domains.csv', 'w', newline='')  as output_file:
-                dict_writer = csv.DictWriter(output_file, keys)
-                dict_writer.writeheader()
-                dict_writer.writerows(domains)
+            csvname = str(host)+"-domains.csv"
+            output_to_csv(csvpath, csvname, domains)
 
         #colorate list values
         for i in range(domains_count):
