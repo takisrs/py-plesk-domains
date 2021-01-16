@@ -18,7 +18,7 @@ ex.
 
 2. Or by pulling and running the image that has been uploaded in the docker hub:   
 ex.   
-```docker container run -it --rm -v ${PWD}:/app py-plesk-domains server-hostname.com -u admin -o ./ -p```   
+```docker container run -it --rm -v ${PWD}:/app takisrs/py-plesk-domains server-hostname.com -u admin -o ./ -p```   
    
 
 ## Instructions
