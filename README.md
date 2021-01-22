@@ -19,7 +19,7 @@ Alternatively, you may quick run it through docker...
 ex.   
 ```docker-compose run --rm py-plesk-domains server-hostname.com -u admin -o ./ -p```  
 
-2. Or by pulling and running the image that has been uploaded in the docker hub:   
+2. Or by pulling and running the image that has been uploaded to the docker hub:   
 ex.   
 ```docker container run -it --rm -v ${PWD}:/app takisrs/py-plesk-domains server-hostname.com -u admin -o ./ -p```   
    
