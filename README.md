@@ -15,7 +15,7 @@ or...
 ## Docker
 Alternatively, you may quick run it through docker...   
 
-1. By cloning this repo and using the provided docker-dompose.yml file:   
+1. By cloning this repo and using the provided docker-compose.yml file:   
 ex.   
 ```docker-compose run --rm py-plesk-domains server-hostname.com -u admin -o ./ -p```  
 
