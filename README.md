@@ -13,13 +13,13 @@ or...
 
 
 ## Docker
-Alternatively, you may quick run it through docker...   
+Alternatively, you may run it quickly through docker...   
 
 1. By cloning this repo and using the provided docker-compose.yml file:   
 ex.   
 ```docker-compose run --rm py-plesk-domains server-hostname.com -u admin -o ./ -p```  
 
-2. Or by pulling and running the image that has been uploaded to the docker hub:   
+2. Or by pulling and running a container of the image that has been uploaded to the docker hub:   
 ex.   
 ```docker container run -it --rm -v ${PWD}:/app takisrs/py-plesk-domains server-hostname.com -u admin -o ./ -p```   
    
